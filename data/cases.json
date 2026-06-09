@@ -1,0 +1,117 @@
+{
+  "1503315468889620520": {
+    "caseCounter": 11,
+    "cases": [
+      {
+        "caseId": 1,
+        "type": "warn",
+        "userId": "772819548150693898",
+        "username": "binibabyq",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Cat",
+        "timestamp": "2026-05-25T05:12:40.570Z"
+      },
+      {
+        "caseId": 2,
+        "type": "warn",
+        "userId": "846364454505676800",
+        "username": "ap0llooo_",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Gay",
+        "timestamp": "2026-05-25T07:04:04.076Z"
+      },
+      {
+        "caseId": 3,
+        "type": "mute",
+        "userId": "846364454505676800",
+        "username": "ap0llooo_",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "No reason provided",
+        "timestamp": "2026-05-25T07:36:29.442Z"
+      },
+      {
+        "caseId": 4,
+        "type": "unmute",
+        "userId": "1388845418787508336",
+        "username": "wrtyq",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "No reason provided",
+        "timestamp": "2026-05-25T07:58:13.962Z"
+      },
+      {
+        "caseId": 5,
+        "type": "mute",
+        "userId": "1388845418787508336",
+        "username": "wrtyq",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Last test",
+        "timestamp": "2026-05-25T07:58:26.052Z"
+      },
+      {
+        "caseId": 6,
+        "type": "mute",
+        "userId": "846364454505676800",
+        "username": "ap0llooo_",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "New Test",
+        "timestamp": "2026-05-25T10:24:45.575Z"
+      },
+      {
+        "caseId": 7,
+        "type": "unmute",
+        "userId": "846364454505676800",
+        "username": "ap0llooo_",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Done",
+        "timestamp": "2026-05-25T10:25:15.060Z"
+      },
+      {
+        "caseId": 8,
+        "type": "warn",
+        "userId": "820265236413808671",
+        "username": "iuuushuu",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Gay",
+        "timestamp": "2026-05-25T10:25:52.549Z"
+      },
+      {
+        "caseId": 9,
+        "type": "clearwarnings",
+        "userId": "820265236413808671",
+        "username": "iuuushuu",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "Takumi",
+        "reason": "Not Gay",
+        "timestamp": "2026-05-25T10:26:31.534Z"
+      },
+      {
+        "caseId": 10,
+        "type": "mute",
+        "userId": "1388845418787508336",
+        "username": "wrtyq",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "匠 ¦ Takumi",
+        "reason": "Test",
+        "timestamp": "2026-05-26T14:23:13.559Z"
+      },
+      {
+        "caseId": 11,
+        "type": "warn",
+        "userId": "1388845418787508336",
+        "username": "wrtyq",
+        "moderatorId": "1503314291003232317",
+        "moderatorName": "匠 ¦ Takumi",
+        "reason": "Profanity",
+        "timestamp": "2026-05-26T14:31:09.327Z"
+      }
+    ]
+  }
+}

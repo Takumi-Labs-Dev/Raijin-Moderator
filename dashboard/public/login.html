@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>雷 ¦ Raijin — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-box {
+      background: #111118;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 40px rgba(204, 0, 0, 0.08);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-logo h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .login-logo span {
+      color: #CC0000;
+    }
+
+    .login-logo p {
+      font-size: 13px;
+      color: #666680;
+      margin-top: 6px;
+    }
+
+    .error-msg {
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid rgba(204, 0, 0, 0.3);
+      color: #ff6666;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #666680;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      background: #0a0a0f;
+      border: 1px solid #1e1e2e;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="password"]:focus {
+      border-color: #CC0000;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      background: #CC0000;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    button:hover {
+      background: #aa0000;
+      box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>雷 ¦ Raijin</h1>
+      <p>Moderation Dashboard — Restricted Access</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg">
+      Incorrect password. Please try again.
+    </div>
+
+    <form method="POST" action="/login">
+      <label for="password">Dashboard Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Enter password"
+        autofocus
+      />
+      <button type="submit">Enter Dashboard</button>
+    </form>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === '1') {
+      document.getElementById('errorMsg').classList.add('visible');
+    }
+  </script>
+
+</body>
+</html>

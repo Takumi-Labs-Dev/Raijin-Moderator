@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>雷 ¦ Raijin — Server Logs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>雷 ¦ Raijin</h1>
+      <p>// Takumi Labs v1.0</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">⬡</span> Overview
+      </a>
+      <a href="/cases" class="nav-item">
+        <span class="nav-icon">◈</span> Case Log
+      </a>
+      <a href="/warnings" class="nav-item">
+        <span class="nav-icon">⚠</span> Warnings
+      </a>
+      <a href="/logs" class="nav-item active">
+        <span class="nav-icon">≡</span> Server Logs
+      </a>
+      <a href="/stats" class="nav-item">
+        <span class="nav-icon">◎</span> Statistics
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">CHECKING...</span>
+      </div>
+      <a href="/logout" class="btn-logout">⏻ Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><span>Server Logs</span> — Event Feed</div>
+      <div class="topbar-meta" id="topMeta">—</div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="section-header">
+        <h2>Event Log</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="controls">
+        <select class="filter-select" id="typeFilter">
+          <option value="">All Events</option>
+          <option value="messageDelete">Message Deleted</option>
+          <option value="messageUpdate">Message Edited</option>
+          <option value="guildMemberAdd">Member Joined</option>
+        </select>
+      </div>
+
+      <!-- LOG TABLE -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Details</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <tr>
+                <td colspan="3">
+                  <div class="empty-state"><p>Loading...</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination" id="pagination"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const PAGE_SIZE = 50;
+  let allLogs    = [];
+  let currentPage = 1;
+
+  const TYPE_LABELS = {
+    messageDelete:  'MESSAGE DELETED',
+    messageUpdate:  'MESSAGE EDITED',
+    guildMemberAdd: 'MEMBER JOINED',
+  };
+
+  const TYPE_BADGE = {
+    messageDelete:  'log',
+    messageUpdate:  'log',
+    guildMemberAdd: 'join',
+  };
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDetails(type, data) {
+    // Build a compact detail string from the data fields
+    const parts = [];
+
+    if (data['Author'])  parts.push(`<span class="text-dim">by</span> <strong>${stripMention(data['Author'])}</strong>`);
+    if (data['Channel']) parts.push(`<span class="text-dim">in</span> ${stripChannel(data['Channel'])}`);
+    if (data['User'])    parts.push(`<strong>${stripMention(data['User'])}</strong>`);
+
+    // New account flag
+    if (data['New Account']) {
+      parts.push(`<span class="badge badge-flag">⚠ NEW ACCOUNT</span>`);
+    }
+
+    if (data['Account Age']) parts.push(`<span class="text-dim">${data['Account Age']} old</span>`);
+    if (data['Content']) {
+      const preview = data['Content'].slice(0, 80) + (data['Content'].length > 80 ? '…' : '');
+      parts.push(`<span class="text-muted">"${preview}"</span>`);
+    }
+    if (data['Before']) {
+      const preview = data['Before'].slice(0, 60) + (data['Before'].length > 60 ? '…' : '');
+      parts.push(`<span class="text-muted">"${preview}"</span>`);
+    }
+
+    return parts.join(' &nbsp;·&nbsp; ');
+  }
+
+  // Strip Discord mention syntax to just the username
+  function stripMention(str) {
+    // "username (<@id>)" → "username"
+    return str.replace(/\s*\(<@!?\d+>\)/, '').trim();
+  }
+
+  // Strip Discord channel mention to readable name
+  function stripChannel(str) {
+    // "<#channelId>" → "#channel"
+    return str.replace(/<#(\d+)>/, '#$1');
+  }
+
+  function isNewAccount(data) {
+    return !!data['New Account'];
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('logTableBody');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = allLogs.slice(start, start + PAGE_SIZE);
+
+    if (allLogs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3">
+        <div class="empty-state"><p>No log entries yet — trigger some events in Discord</p></div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = slice.map(entry => {
+      const badgeType = TYPE_BADGE[entry.type] || 'log';
+      const label     = TYPE_LABELS[entry.type] || entry.type.toUpperCase();
+      const flagRow   = isNewAccount(entry.data) ? ' flag-new' : '';
+
+      return `
+        <tr class="${flagRow}">
+          <td style="white-space:nowrap;">
+            <span class="badge badge-${badgeType}">${label}</span>
+          </td>
+          <td>${formatDetails(entry.type, entry.data)}</td>
+          <td class="td-mono" style="white-space:nowrap;">${formatDate(entry.timestamp)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(allLogs.length / PAGE_SIZE);
+    const pag   = document.getElementById('pagination');
+    if (total <= 1) { pag.innerHTML = ''; return; }
+
+    let html = '';
+    html += `<button class="page-btn" onclick="goPage(${currentPage - 1})"
+      ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+
+    for (let i = 1; i <= total; i++) {
+      if (total > 7 && i > 2 && i < total - 1 && Math.abs(i - currentPage) > 1) {
+        if (i === 3 || i === total - 2) {
+          html += `<span class="page-btn" style="cursor:default;opacity:0.4">…</span>`;
+        }
+        continue;
+      }
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}"
+        onclick="goPage(${i})">${i}</button>`;
+    }
+
+    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})"
+      ${currentPage === total ? 'disabled' : ''}>Next →</button>`;
+
+    pag.innerHTML = html;
+  }
+
+  function goPage(n) {
+    const total = Math.ceil(allLogs.length / PAGE_SIZE);
+    if (n < 1 || n > total) return;
+    currentPage = n;
+    renderTable();
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadData() {
+    const type = document.getElementById('typeFilter').value;
+    const params = new URLSearchParams();
+    if (type) params.set('type', type);
+
+    try {
+      const res  = await fetch('/api/logs?' + params.toString());
+      const data = await res.json();
+
+      allLogs     = data.logs || [];
+      currentPage = 1;
+
+      document.getElementById('topMeta').textContent =
+        allLogs.length + ' event' + (allLogs.length !== 1 ? 's' : '');
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = 'RAIJIN ONLINE';
+
+      renderTable();
+      renderPagination();
+
+    } catch (err) {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'DATA ERROR';
+    }
+  }
+
+  document.getElementById('typeFilter').addEventListener('change', loadData);
+
+  loadData();
+  setInterval(loadData, 30000);
+</script>
+</body>
+</html>

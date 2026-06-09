@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>雷 ¦ Raijin — Case Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>雷 ¦ Raijin</h1>
+      <p>// Takumi Labs v1.0</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">⬡</span> Overview
+      </a>
+      <a href="/cases" class="nav-item active">
+        <span class="nav-icon">◈</span> Case Log
+      </a>
+      <a href="/warnings" class="nav-item">
+        <span class="nav-icon">⚠</span> Warnings
+      </a>
+      <a href="/logs" class="nav-item">
+        <span class="nav-icon">≡</span> Server Logs
+      </a>
+      <a href="/stats" class="nav-item">
+        <span class="nav-icon">◎</span> Statistics
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">CHECKING...</span>
+      </div>
+      <a href="/logout" class="btn-logout">⏻ Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><span>Case Log</span> — All Moderation Actions</div>
+      <div class="topbar-meta" id="totalCount">—</div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="section-header">
+        <h2>Case Records</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="controls">
+        <input
+          type="text"
+          class="search-input"
+          id="searchInput"
+          placeholder="Search username or moderator..."
+        />
+        <select class="filter-select" id="typeFilter">
+          <option value="">All Types</option>
+          <option value="ban">Ban</option>
+          <option value="kick">Kick</option>
+          <option value="mute">Mute</option>
+          <option value="warn">Warn</option>
+          <option value="unmute">Unmute</option>
+          <option value="clearwarnings">Clear Warnings</option>
+        </select>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Case #</th>
+                <th>Type</th>
+                <th>User</th>
+                <th>Moderator</th>
+                <th>Reason</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="caseTableBody">
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state"><p>Loading...</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination" id="pagination"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const PAGE_SIZE = 25;
+  let allCases = [];
+  let currentPage = 1;
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function badgeClass(type) {
+    const map = { ban: 'ban', kick: 'kick', mute: 'mute', warn: 'warn',
+                  unmute: 'log', clearwarnings: 'log' };
+    return map[type] || 'log';
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('caseTableBody');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = allCases.slice(start, start + PAGE_SIZE);
+
+    if (allCases.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6">
+        <div class="empty-state"><p>No cases found</p></div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = slice.map(c => `
+      <tr>
+        <td class="td-mono">#${c.caseId}</td>
+        <td><span class="badge badge-${badgeClass(c.type)}">${c.type}</span></td>
+        <td><strong>${c.username}</strong></td>
+        <td class="td-mono">${c.moderatorName}</td>
+        <td class="td-reason" title="${c.reason}">${c.reason}</td>
+        <td class="td-mono">${formatDate(c.timestamp)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(allCases.length / PAGE_SIZE);
+    const pag   = document.getElementById('pagination');
+
+    if (total <= 1) { pag.innerHTML = ''; return; }
+
+    let html = '';
+
+    html += `<button class="page-btn" onclick="goPage(${currentPage - 1})"
+      ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+
+    for (let i = 1; i <= total; i++) {
+      if (total > 7 && i > 2 && i < total - 1 &&
+          Math.abs(i - currentPage) > 1) {
+        if (i === 3 || i === total - 2) {
+          html += `<span class="page-btn" style="cursor:default;opacity:0.4">…</span>`;
+        }
+        continue;
+      }
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}"
+        onclick="goPage(${i})">${i}</button>`;
+    }
+
+    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})"
+      ${currentPage === total ? 'disabled' : ''}>Next →</button>`;
+
+    pag.innerHTML = html;
+  }
+
+  function goPage(n) {
+    const total = Math.ceil(allCases.length / PAGE_SIZE);
+    if (n < 1 || n > total) return;
+    currentPage = n;
+    renderTable();
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadData() {
+    const search = document.getElementById('searchInput').value.trim();
+    const type   = document.getElementById('typeFilter').value;
+
+    const params = new URLSearchParams();
+    if (type)   params.set('type', type);
+    if (search) params.set('search', search);
+
+    try {
+      const res  = await fetch('/api/cases?' + params.toString());
+      const data = await res.json();
+
+      allCases    = data.cases || [];
+      currentPage = 1;
+
+      document.getElementById('totalCount').textContent =
+        allCases.length + ' case' + (allCases.length !== 1 ? 's' : '');
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = 'RAIJIN ONLINE';
+
+      renderTable();
+      renderPagination();
+
+    } catch (err) {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'DATA ERROR';
+    }
+  }
+
+  // Debounce search so it doesn't fire on every keystroke
+  let debounceTimer;
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadData, 300);
+  });
+
+  document.getElementById('typeFilter').addEventListener('change', loadData);
+
+  loadData();
+  setInterval(loadData, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "raijin",
+  "version": "1.0.0",
+  "description": "A production-ready Discord moderation bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "deploy": "node utils/deployCommands.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2"
+  }
+}

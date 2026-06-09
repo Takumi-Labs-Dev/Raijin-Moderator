@@ -1,0 +1,40 @@
+{
+  "1503315468889620520": {
+    "772819548150693898": {
+      "warnings": [
+        {
+          "warningId": 1,
+          "reason": "Cat",
+          "moderatorId": "1503314291003232317",
+          "moderatorName": "Takumi",
+          "timestamp": "2026-05-25T05:12:38.863Z"
+        }
+      ]
+    },
+    "846364454505676800": {
+      "warnings": [
+        {
+          "warningId": 1,
+          "reason": "Gay",
+          "moderatorId": "1503314291003232317",
+          "moderatorName": "Takumi",
+          "timestamp": "2026-05-25T07:04:03.608Z"
+        }
+      ]
+    },
+    "820265236413808671": {
+      "warnings": []
+    },
+    "1388845418787508336": {
+      "warnings": [
+        {
+          "warningId": 1,
+          "reason": "Profanity",
+          "moderatorId": "1503314291003232317",
+          "moderatorName": "匠 ¦ Takumi",
+          "timestamp": "2026-05-26T14:31:08.844Z"
+        }
+      ]
+    }
+  }
+}

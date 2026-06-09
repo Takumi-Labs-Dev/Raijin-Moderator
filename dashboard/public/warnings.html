@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>雷 ¦ Raijin — Warnings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>雷 ¦ Raijin</h1>
+      <p>// Takumi Labs v1.0</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">⬡</span> Overview
+      </a>
+      <a href="/cases" class="nav-item">
+        <span class="nav-icon">◈</span> Case Log
+      </a>
+      <a href="/warnings" class="nav-item active">
+        <span class="nav-icon">⚠</span> Warnings
+      </a>
+      <a href="/logs" class="nav-item">
+        <span class="nav-icon">≡</span> Server Logs
+      </a>
+      <a href="/stats" class="nav-item">
+        <span class="nav-icon">◎</span> Statistics
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">CHECKING...</span>
+      </div>
+      <a href="/logout" class="btn-logout">⏻ Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><span>Warnings</span> — User Warning Lookup</div>
+      <div class="topbar-meta" id="topMeta">—</div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="section-header">
+        <h2>Warning Lookup</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-title">Search User</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input
+            type="text"
+            class="search-input"
+            id="userSearch"
+            placeholder="Enter username..."
+            style="flex:1;"
+          />
+          <button class="page-btn" id="searchBtn"
+            style="padding: 8px 20px; cursor:pointer;">
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div id="resultArea"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function formatDate(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderNotFound(query) {
+    return `
+      <div class="card">
+        <div class="empty-state">
+          <p>No warnings found for "${query}"</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderResults(data) {
+    if (!data.found) {
+      return renderNotFound(document.getElementById('userSearch').value);
+    }
+
+    const warningRows = data.warnings.length === 0
+      ? `<tr><td colspan="4">
+           <div class="empty-state"><p>All warnings have been cleared</p></div>
+         </td></tr>`
+      : data.warnings.map(w => `
+          <tr>
+            <td class="td-mono">#${w.warningId}</td>
+            <td class="td-reason" title="${w.reason}">${w.reason}</td>
+            <td class="td-mono">${w.moderatorName}</td>
+            <td class="td-mono">${formatDate(w.timestamp)}</td>
+          </tr>
+        `).join('');
+
+    return `
+      <div class="user-card">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+          <h3>${data.username}</h3>
+          <p>WARNING RECORD — Raijin DATABASE</p>
+        </div>
+        <div class="user-warn-count">${data.total}</div>
+      </div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Reason</th>
+                <th>Moderator</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>${warningRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  async function doSearch() {
+    const query = document.getElementById('userSearch').value.trim();
+    if (!query) return;
+
+    const resultArea = document.getElementById('resultArea');
+    resultArea.innerHTML = '<div class="card"><div class="empty-state"><p>Searching...</p></div></div>';
+
+    try {
+      const res  = await fetch('/api/warnings?user=' + encodeURIComponent(query));
+      const data = await res.json();
+
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = 'RAIJIN ONLINE';
+      document.getElementById('topMeta').textContent =
+        data.found ? data.total + ' warning(s) found' : 'No results';
+
+      resultArea.innerHTML = renderResults(data);
+
+    } catch (err) {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'DATA ERROR';
+      resultArea.innerHTML = '<div class="card"><div class="empty-state"><p>Failed to fetch data</p></div></div>';
+    }
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+
+  document.getElementById('userSearch').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
+</body>
+</html>

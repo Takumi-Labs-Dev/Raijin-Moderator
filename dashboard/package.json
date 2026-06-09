@@ -1,0 +1,16 @@
+{
+  "name": "raijin-dashboard",
+  "version": "1.0.0",
+  "description": "Web dashboard for 雷 ¦ Raijin moderation bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-session": "^1.19.0"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+.env
+database.sqlite
+dashboard/public/avatars/
+*.log
+.git
+logs.json
+dist/

@@ -1,0 +1,54 @@
+{
+  "name": "raijin",
+  "version": "1.0.0",
+  "description": "雷 ¦ Raijin — Discord moderation bot with desktop dashboard",
+  "main": "electron/main.js",
+  "author": "Takumi Labs",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix bot && npm install --prefix dashboard",
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.takumilabs.raijin",
+    "productName": "Raijin",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "bot/**/*",
+      "dashboard/**/*",
+      "data/**/*",
+      ".env.example",
+      "!bot/.gitignore",
+      "!dashboard/.dockerignore",
+      "!dashboard/dockerfile",
+      "!bot/Dockerfile",
+      "!bot/.dockerignore"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
