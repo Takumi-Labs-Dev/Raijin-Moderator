@@ -5,4 +5,7 @@ dashboard/public/avatars/
 *.log
 .git
 logs.json
+cases.json
+config.json
+warnings.json
 dist/

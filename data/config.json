@@ -1,5 +1,54 @@
 {
   "1503315468889620520": {
-    "logChannelId": "1508335499671109743"
+    "serverName": "Raijin Server",
+    "serverIcon": null,
+    "memberCount": 1,
+    "logChannelId": "1508335499671109743",
+    "automod": {
+      "enabled": true,
+      "bannedWords": {
+        "enabled": false,
+        "response": ""
+      },
+      "spam": {
+        "enabled": false,
+        "limit": 5,
+        "interval": 3000,
+        "actions": {
+          "0": "delete",
+          "1": "mute"
+        }
+      },
+      "links": {
+        "enabled": false,
+        "blockInvites": true,
+        "blockLinks": true,
+        "whitelistDomains": {},
+        "actions": {
+          "0": "delete"
+        }
+      },
+      "caps": {
+        "enabled": false,
+        "threshold": 70,
+        "minLength": 5
+      },
+      "mentions": {
+        "enabled": false,
+        "limit": 5,
+        "excludeUserMentions": false
+      },
+      "antiRaid": {
+        "enabled": false,
+        "threshold": 5,
+        "detectionWindow": 10000,
+        "actions": {
+          "0": "slowmode"
+        }
+      },
+      "warningEscalation": {
+        "enabled": false
+      }
+    }
   }
 }

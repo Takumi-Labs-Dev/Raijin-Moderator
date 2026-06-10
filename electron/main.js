@@ -2,7 +2,7 @@ const { app, BrowserWindow, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const { fork } = require('child_process');
+const { spawn } = require('child_process');
 
 const PORT = 3000;
 const DASHBOARD_URL = `http://127.0.0.1:${PORT}`;
@@ -12,7 +12,9 @@ let botProcess = null;
 let dashboardProcess = null;
 
 function getProjectRoot() {
-  return path.join(__dirname, '..');
+  const base = path.join(__dirname, '..');
+  const unpacked = base.replace('app.asar', 'app.asar.unpacked');
+  return fs.existsSync(unpacked) ? unpacked : base;
 }
 
 function getUserPaths() {
@@ -93,18 +95,23 @@ function childEnv() {
   };
 }
 
+function spawnNode(script, cwd, extraEnv = {}) {
+  const env = { ...childEnv(), ...extraEnv, ELECTRON_RUN_AS_NODE: '1' };
+
+  return spawn(process.execPath, [script], {
+    cwd,
+    env,
+    stdio: 'inherit',
+  });
+}
+
 function startDashboard() {
   const root = getProjectRoot();
   const script = path.join(root, 'dashboard', 'server.js');
 
-  dashboardProcess = fork(script, [], {
-    cwd: path.join(root, 'dashboard'),
-    env: {
-      ...childEnv(),
-      NODE_ENV: 'production',
-      PORT: String(PORT),
-    },
-    stdio: 'inherit',
+  dashboardProcess = spawnNode(script, path.join(root, 'dashboard'), {
+    NODE_ENV: 'production',
+    PORT: String(PORT),
   });
 
   dashboardProcess.on('exit', (code) => {
@@ -126,11 +133,7 @@ function startBot() {
     return;
   }
 
-  botProcess = fork(script, [], {
-    cwd: path.join(root, 'bot'),
-    env: childEnv(),
-    stdio: 'inherit',
-  });
+  botProcess = spawnNode(script, path.join(root, 'bot'));
 
   botProcess.on('exit', (code) => {
     botProcess = null;

@@ -5,124 +5,229 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>雷 ¦ Raijin — Login</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: #0a0a0f;
-      color: #e0e0e0;
-      font-family: 'Inter', sans-serif;
-      height: 100vh;
+    body.login-page {
       display: flex;
       align-items: center;
       justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* decorative ambient glow orbs */
+    .login-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .login-orb-1 {
+      width: 400px; height: 400px;
+      background: rgba(204,0,0,0.18);
+      top: -80px; right: -80px;
+      animation: orbFloat1 8s ease-in-out infinite;
+    }
+    .login-orb-2 {
+      width: 300px; height: 300px;
+      background: rgba(220,20,60,0.12);
+      bottom: -60px; left: -60px;
+      animation: orbFloat2 10s ease-in-out infinite;
+    }
+
+    @keyframes orbFloat1 {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      50%       { transform: translate(-20px, 20px) scale(1.05); }
+    }
+    @keyframes orbFloat2 {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      50%       { transform: translate(20px, -20px) scale(1.08); }
     }
 
     .login-box {
-      background: #111118;
-      border: 1px solid #1e1e2e;
-      border-radius: 12px;
-      padding: 48px 40px;
+      position: relative;
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.65);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 48px 44px;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 0 40px rgba(204, 0, 0, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(204,0,0,0.12),
+        0 24px 64px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      animation: loginAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes loginAppear {
+      from { opacity: 0; transform: translateY(24px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* top crimson glow bar */
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(220,20,60,0.70), rgba(204,0,0,0.80), rgba(220,20,60,0.70), transparent);
+      border-radius: 0 0 50% 50%;
     }
 
     .login-logo {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 36px;
+    }
+
+    .login-logo-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, rgba(204,0,0,0.28), rgba(136,0,0,0.18));
+      border: 1px solid rgba(204,0,0,0.35);
+      border-radius: 16px;
+      font-size: 30px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(204,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
     }
 
     .login-logo h1 {
       font-size: 22px;
       font-weight: 700;
-      color: #ffffff;
+      background: linear-gradient(135deg, #ffffff 0%, #DC143C 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       letter-spacing: 0.5px;
     }
 
-    .login-logo span {
-      color: #CC0000;
-    }
-
     .login-logo p {
-      font-size: 13px;
-      color: #666680;
+      font-size: 12px;
+      color: rgba(106,106,128,0.90);
       margin-top: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
     .error-msg {
-      background: rgba(204, 0, 0, 0.1);
-      border: 1px solid rgba(204, 0, 0, 0.3);
-      color: #ff6666;
+      background: rgba(204,0,0,0.10);
+      border: 1px solid rgba(204,0,0,0.30);
+      color: #ff7777;
       padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.5px;
       margin-bottom: 20px;
       display: none;
     }
 
-    .error-msg.visible {
-      display: block;
-    }
+    .error-msg.visible { display: block; }
 
     label {
       display: block;
-      font-size: 13px;
-      color: #666680;
+      font-size: 11px;
+      color: rgba(106,106,128,0.90);
       margin-bottom: 8px;
-      font-weight: 500;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
     }
 
     input[type="password"] {
       width: 100%;
-      background: #0a0a0f;
-      border: 1px solid #1e1e2e;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: #e0e0e0;
+      background: rgba(4,4,10,0.70);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: #f0f0f5;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.35);
     }
 
     input[type="password"]:focus {
-      border-color: #CC0000;
+      border-color: rgba(204,0,0,0.50);
+      box-shadow: 0 0 0 3px rgba(204,0,0,0.10), inset 0 2px 6px rgba(0,0,0,0.35);
     }
 
-    button {
+    input[type="password"]::placeholder { color: rgba(106,106,128,0.60); }
+
+    .login-btn {
       width: 100%;
-      margin-top: 20px;
-      background: #CC0000;
+      margin-top: 22px;
+      background: linear-gradient(135deg, #DC143C, #880000);
       color: #ffffff;
       border: none;
-      border-radius: 8px;
-      padding: 13px;
+      border-radius: 10px;
+      padding: 14px;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s, box-shadow 0.2s;
-      letter-spacing: 0.3px;
+      transition: all 0.25s ease;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 20px rgba(204,0,0,0.30), 0 2px 6px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
     }
 
-    button:hover {
-      background: #aa0000;
-      box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.10), transparent);
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.25s ease;
     }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(204,0,0,0.45), 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .login-btn:hover::before { opacity: 1; }
+    .login-btn:active { transform: translateY(0); }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: rgba(106,106,128,0.60);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .login-footer span { color: rgba(204,0,0,0.60); }
   </style>
 </head>
-<body>
+<body class="login-page">
+
+  <div class="login-orb login-orb-1"></div>
+  <div class="login-orb login-orb-2"></div>
 
   <div class="login-box">
     <div class="login-logo">
+      <div class="login-logo-icon">雷</div>
       <h1>雷 ¦ Raijin</h1>
       <p>Moderation Dashboard — Restricted Access</p>
     </div>
 
     <div class="error-msg" id="errorMsg">
-      Incorrect password. Please try again.
+      ⚠ Incorrect password. Please try again.
     </div>
 
     <form method="POST" action="/login">
@@ -131,11 +236,15 @@
         type="password"
         id="password"
         name="password"
-        placeholder="Enter password"
+        placeholder="Enter access key..."
         autofocus
       />
-      <button type="submit">Enter Dashboard</button>
+      <button type="submit" class="login-btn">Enter Dashboard</button>
     </form>
+
+    <div class="login-footer">
+      Takumi Labs <span>//</span> v1.0 <span>//</span> Authorized Access Only
+    </div>
   </div>
 
   <script>

@@ -35,6 +35,9 @@
       <a href="/stats" class="nav-item">
         <span class="nav-icon">◎</span> Statistics
       </a>
+      <a href="/automod" class="nav-item">
+        <span class="nav-icon">🛡</span> Auto Moderation
+      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-status">
@@ -54,7 +57,52 @@
 
     <div class="page-body">
 
-      <!-- STAT CARDS -->
+      <!-- SERVER INFO CARD -->
+      <div class="card server-info-card">
+        <div class="server-info-header">
+          <div class="server-icon" id="serverIconEl">雷</div>
+          <div class="server-details">
+            <div class="server-name" id="serverName">Loading...</div>
+            <div class="server-meta" id="serverMeta">—</div>
+          </div>
+          <div class="server-status">
+            <div class="status-indicator online"></div>
+            <span>Online</span>
+          </div>
+        </div>
+        <div class="server-stats">
+          <div class="server-stat">
+            <div class="stat-icon-small">👥</div>
+            <div class="stat-info">
+              <div class="stat-value-small" id="memberCount">—</div>
+              <div class="stat-label-small">Members</div>
+            </div>
+          </div>
+          <div class="server-stat">
+            <div class="stat-icon-small">📊</div>
+            <div class="stat-info">
+              <div class="stat-value-small" id="totalCases">—</div>
+              <div class="stat-label-small">Total Cases</div>
+            </div>
+          </div>
+          <div class="server-stat">
+            <div class="stat-icon-small">⚡</div>
+            <div class="stat-info">
+              <div class="stat-value-small" id="automodStatus">—</div>
+              <div class="stat-label-small">AutoMod</div>
+            </div>
+          </div>
+          <div class="server-stat">
+            <div class="stat-icon-small">🕐</div>
+            <div class="stat-info">
+              <div class="stat-value-small" id="uptime">—</div>
+              <div class="stat-label-small">Uptime</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION TOTALS -->
       <div class="section-header">
         <h2>Action Totals</h2>
         <div class="section-divider"></div>
@@ -82,8 +130,62 @@
         </div>
       </div>
 
+      <!-- QUICK NAV -->
+      <div class="section-header">
+        <h2>Quick Access</h2>
+        <div class="section-divider"></div>
+      </div>
+      <div class="quick-actions-grid">
+        <a href="/cases" class="quick-action-card">
+          <div class="quick-action-icon">◈</div>
+          <div>
+            <div class="quick-action-label">Case Log</div>
+            <div class="quick-action-sub">All moderation actions</div>
+          </div>
+        </a>
+        <a href="/warnings" class="quick-action-card">
+          <div class="quick-action-icon">⚠</div>
+          <div>
+            <div class="quick-action-label">Warnings</div>
+            <div class="quick-action-sub">Look up user records</div>
+          </div>
+        </a>
+        <a href="/automod" class="quick-action-card">
+          <div class="quick-action-icon">🛡</div>
+          <div>
+            <div class="quick-action-label">Auto Moderation</div>
+            <div class="quick-action-sub">Configure filters</div>
+          </div>
+        </a>
+        <a href="/logs" class="quick-action-card">
+          <div class="quick-action-icon">≡</div>
+          <div>
+            <div class="quick-action-label">Server Logs</div>
+            <div class="quick-action-sub">Event feed</div>
+          </div>
+        </a>
+        <a href="/stats" class="quick-action-card">
+          <div class="quick-action-icon">◎</div>
+          <div>
+            <div class="quick-action-label">Statistics</div>
+            <div class="quick-action-sub">Analytics & charts</div>
+          </div>
+        </a>
+        <div class="quick-action-card" style="cursor:default;" id="todayCard">
+          <div class="quick-action-icon">📅</div>
+          <div>
+            <div class="quick-action-label">Today</div>
+            <div class="quick-action-sub" id="todayActions">Loading actions...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- CHART + FEED ROW -->
-      <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start;">
+      <div class="section-header">
+        <h2>Activity</h2>
+        <div class="section-divider"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
 
         <!-- TIMELINE CHART -->
         <div class="card">
@@ -94,7 +196,7 @@
         </div>
 
         <!-- RECENT FEED -->
-        <div class="card">
+        <div class="card" style="margin-bottom:0;">
           <div class="card-title">Recent Actions</div>
           <div id="recentFeed">
             <div class="empty-state"><p>Loading...</p></div>
@@ -109,6 +211,7 @@
 
 <script>
   let timelineChart = null;
+  let botStartTime  = Date.now();
 
   function formatTime(ts) {
     const d = new Date(ts);
@@ -116,14 +219,18 @@
       + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   }
 
+  function formatUptime(ms) {
+    const s = Math.floor(ms / 1000), m = Math.floor(s / 60),
+          h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (d > 0) return `${d}d ${h % 24}h`;
+    if (h > 0) return `${h}h ${m % 60}m`;
+    if (m > 0) return `${m}m ${s % 60}s`;
+    return `${s}s`;
+  }
+
   function badgeClass(type) {
-    if (type === 'ban')           return 'ban';
-    if (type === 'kick')          return 'kick';
-    if (type === 'mute')          return 'mute';
-    if (type === 'warn')          return 'warn';
-    if (type === 'unmute')        return 'log';
-    if (type === 'clearwarnings') return 'log';
-    return 'log';
+    return { ban:'ban', kick:'kick', mute:'mute', warn:'warn',
+             unmute:'log', clearwarnings:'log' }[type] || 'log';
   }
 
   function renderFeed(items) {
@@ -137,8 +244,7 @@
         <div class="feed-dot ${badgeClass(c.type)}"></div>
         <div class="feed-content">
           <div class="feed-main">
-            <strong>${c.username}</strong>
-            &mdash;
+            <strong>${c.username}</strong> &mdash;
             <span class="badge badge-${badgeClass(c.type)}">${c.type}</span>
           </div>
           <div class="feed-time">${formatTime(c.timestamp)} &middot; by ${c.moderatorName}</div>
@@ -148,12 +254,10 @@
   }
 
   function renderChart(timeline) {
-    const ctx = document.getElementById('timelineChart').getContext('2d');
+    const ctx    = document.getElementById('timelineChart').getContext('2d');
     const labels = timeline.map(t => t.date);
     const data   = timeline.map(t => t.count);
-
     if (timelineChart) timelineChart.destroy();
-
     timelineChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -161,10 +265,11 @@
         datasets: [{
           label: 'Actions',
           data,
-          borderColor: '#CC0000',
-          backgroundColor: 'rgba(204,0,0,0.08)',
+          borderColor: '#DC143C',
+          backgroundColor: 'rgba(220,20,60,0.06)',
           borderWidth: 2,
           pointBackgroundColor: '#CC0000',
+          pointBorderColor: 'rgba(220,20,60,0.5)',
           pointRadius: 4,
           pointHoverRadius: 6,
           fill: true,
@@ -174,9 +279,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           x: {
             ticks: { color: '#555570', font: { family: 'Share Tech Mono', size: 10 } },
@@ -192,6 +295,47 @@
     });
   }
 
+  async function loadServerInfo() {
+    try {
+      const res      = await fetch('/api/overview');
+      const data     = await res.json();
+      const total    = (data.counts.ban||0)+(data.counts.kick||0)+(data.counts.mute||0)+(data.counts.warn||0);
+      const guildId  = '1503315468889620520';
+
+      document.getElementById('totalCases').textContent = total;
+
+      // today count from timeline
+      const today = new Date().toISOString().slice(0,10);
+      const todayEntry = (data.timeline || []).find(t => t.date === today);
+      document.getElementById('todayActions').textContent =
+        (todayEntry ? todayEntry.count : 0) + ' action(s) today';
+
+      try {
+        const gr = await fetch(`/api/guild/${guildId}`);
+        const gd = await gr.json();
+        document.getElementById('serverName').textContent = gd.name || 'Raijin Server';
+        document.getElementById('serverMeta').textContent = `ID: ${guildId}`;
+        document.getElementById('memberCount').textContent = gd.memberCount || '—';
+        if (gd.icon) {
+          const el = document.getElementById('serverIconEl');
+          el.style.backgroundImage = `url(${gd.icon})`;
+          el.style.backgroundSize  = 'cover';
+          el.textContent = '';
+        }
+      } catch { document.getElementById('serverName').textContent = 'Raijin Server'; }
+
+      try {
+        const ar = await fetch(`/api/automod/config/${guildId}`);
+        const ad = await ar.json();
+        const el = document.getElementById('automodStatus');
+        el.textContent = ad.enabled ? 'Enabled' : 'Disabled';
+        el.style.color = ad.enabled ? 'var(--online)' : 'var(--text-muted)';
+      } catch { document.getElementById('automodStatus').textContent = 'Disabled'; }
+
+      document.getElementById('uptime').textContent = formatUptime(Date.now() - botStartTime);
+    } catch (err) { console.error('Server info error:', err); }
+  }
+
   async function loadData() {
     try {
       const res  = await fetch('/api/overview');
@@ -204,8 +348,8 @@
 
       renderFeed(data.recent);
       renderChart(data.timeline);
+      await loadServerInfo();
 
-      // Bot status — if we got data, the files are readable = operational
       document.getElementById('statusDot').classList.remove('offline');
       document.getElementById('statusText').textContent = 'RAIJIN ONLINE';
       document.getElementById('lastUpdated').textContent =
@@ -217,9 +361,11 @@
     }
   }
 
-  // Load immediately, then refresh every 30 seconds
   loadData();
   setInterval(loadData, 30000);
+  setInterval(() => {
+    document.getElementById('uptime').textContent = formatUptime(Date.now() - botStartTime);
+  }, 1000);
 </script>
 </body>
 </html>

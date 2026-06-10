@@ -19,6 +19,7 @@
   "build": {
     "appId": "com.takumilabs.raijin",
     "productName": "Raijin",
+    "icon": "assets/icon.ico",
     "directories": {
       "output": "dist"
     },
@@ -27,6 +28,7 @@
       "bot/**/*",
       "dashboard/**/*",
       "data/**/*",
+      "assets/**/*",
       ".env.example",
       "!bot/.gitignore",
       "!dashboard/.dockerignore",
@@ -34,7 +36,13 @@
       "!bot/Dockerfile",
       "!bot/.dockerignore"
     ],
+    "asarUnpack": [
+      "bot/**",
+      "dashboard/**",
+      "data/**"
+    ],
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",

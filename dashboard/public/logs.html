@@ -34,6 +34,9 @@
       <a href="/stats" class="nav-item">
         <span class="nav-icon">◎</span> Statistics
       </a>
+      <a href="/automod" class="nav-item">
+        <span class="nav-icon">🛡</span> Auto Moderation
+      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-status">
@@ -66,6 +69,7 @@
           <option value="messageUpdate">Message Edited</option>
           <option value="guildMemberAdd">Member Joined</option>
         </select>
+        <button class="btn-danger" id="clearAllLogs">Clear All Logs</button>
       </div>
 
       <!-- LOG TABLE -->
@@ -77,11 +81,12 @@
                 <th>Event</th>
                 <th>Details</th>
                 <th>Date</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="logTableBody">
               <tr>
-                <td colspan="3">
+                <td colspan="4">
                   <div class="empty-state"><p>Loading...</p></div>
                 </td>
               </tr>
@@ -99,7 +104,7 @@
 
 <script>
   const PAGE_SIZE = 50;
-  let allLogs    = [];
+  let allLogs     = [];
   let currentPage = 1;
 
   const TYPE_LABELS = {
@@ -121,14 +126,12 @@
   }
 
   function formatDetails(type, data) {
-    // Build a compact detail string from the data fields
     const parts = [];
 
     if (data['Author'])  parts.push(`<span class="text-dim">by</span> <strong>${stripMention(data['Author'])}</strong>`);
     if (data['Channel']) parts.push(`<span class="text-dim">in</span> ${stripChannel(data['Channel'])}`);
     if (data['User'])    parts.push(`<strong>${stripMention(data['User'])}</strong>`);
 
-    // New account flag
     if (data['New Account']) {
       parts.push(`<span class="badge badge-flag">⚠ NEW ACCOUNT</span>`);
     }
@@ -146,15 +149,11 @@
     return parts.join(' &nbsp;·&nbsp; ');
   }
 
-  // Strip Discord mention syntax to just the username
   function stripMention(str) {
-    // "username (<@id>)" → "username"
     return str.replace(/\s*\(<@!?\d+>\)/, '').trim();
   }
 
-  // Strip Discord channel mention to readable name
   function stripChannel(str) {
-    // "<#channelId>" → "#channel"
     return str.replace(/<#(\d+)>/, '#$1');
   }
 
@@ -168,7 +167,7 @@
     const slice = allLogs.slice(start, start + PAGE_SIZE);
 
     if (allLogs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3">
+      tbody.innerHTML = `<tr><td colspan="4">
         <div class="empty-state"><p>No log entries yet — trigger some events in Discord</p></div>
       </td></tr>`;
       return;
@@ -179,6 +178,7 @@
       const label     = TYPE_LABELS[entry.type] || entry.type.toUpperCase();
       const flagRow   = isNewAccount(entry.data) ? ' flag-new' : '';
 
+      // Use _guildId and _index injected by the API for deletion
       return `
         <tr class="${flagRow}">
           <td style="white-space:nowrap;">
@@ -186,6 +186,12 @@
           </td>
           <td>${formatDetails(entry.type, entry.data)}</td>
           <td class="td-mono" style="white-space:nowrap;">${formatDate(entry.timestamp)}</td>
+          <td>
+            <button
+              class="btn-delete-small"
+              onclick="deleteLog('${entry._guildId}', ${entry._index})"
+              title="Delete log">🗑</button>
+          </td>
         </tr>
       `;
     }).join('');
@@ -252,6 +258,43 @@
     }
   }
 
+  // Now uses guildId + index — matches the new DELETE /api/logs/:guildId/:index route
+  async function deleteLog(guildId, index) {
+    if (!confirm('Are you sure you want to delete this log entry?')) return;
+
+    try {
+      const res  = await fetch(`/api/logs/${guildId}/${index}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (data.success) {
+        loadData();
+      } else {
+        alert('Failed to delete log: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Failed to delete log');
+    }
+  }
+
+  async function clearAllLogs() {
+    if (!confirm('Are you sure you want to delete ALL logs? This cannot be undone.')) return;
+
+    // Collect all unique guildIds present in the current log data
+    const guildIds = [...new Set(allLogs.map(l => l._guildId))];
+
+    try {
+      await Promise.all(
+        guildIds.map(guildId =>
+          fetch(`/api/logs/guild/${guildId}`, { method: 'DELETE' })
+        )
+      );
+      loadData();
+    } catch (err) {
+      alert('Failed to clear logs');
+    }
+  }
+
+  document.getElementById('clearAllLogs').addEventListener('click', clearAllLogs);
   document.getElementById('typeFilter').addEventListener('change', loadData);
 
   loadData();

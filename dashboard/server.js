@@ -42,6 +42,7 @@ app.use('/api', (req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/assets', express.static('/assets'));
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -73,6 +74,19 @@ function readJSON(filename) {
   }
 }
 
+function writeJSON(filename, data) {
+  try {
+    const filePath = path.join(getDataDir(), filename);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Failed to write JSON:', err);
+    return false;
+  }
+}
+
+// ── AUTH ROUTES ───────────────────────────────────────────────────
+
 app.post('/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   if (password === process.env.DASHBOARD_PASSWORD) {
@@ -87,6 +101,8 @@ app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login.html');
 });
+
+// ── PAGE ROUTES ───────────────────────────────────────────────────
 
 app.get('/', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -107,6 +123,12 @@ app.get('/logs', requireAuth, (req, res) => {
 app.get('/stats', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'stats.html'));
 });
+
+app.get('/automod', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'automod.html'));
+});
+
+// ── API DATA ROUTES ───────────────────────────────────────────────
 
 app.get('/api/overview', requireAuth, (req, res) => {
   const cases = readJSON('cases.json');
@@ -216,7 +238,10 @@ app.get('/api/logs', requireAuth, (req, res) => {
   let allLogs = [];
   for (const guildId in logs) {
     const entries = logs[guildId] || [];
-    allLogs = allLogs.concat(entries);
+    // Attach guildId and array index so the frontend can reference them for deletion
+    entries.forEach((entry, index) => {
+      allLogs.push({ ...entry, _guildId: guildId, _index: index });
+    });
   }
 
   allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -296,6 +321,209 @@ app.get('/api/stats', requireAuth, (req, res) => {
   });
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+// ── AUTOMOD API ROUTES ────────────────────────────────────────────
+
+app.get('/api/automod/config/:guildId', requireAuth, (req, res) => {
+  const config = readJSON('config.json');
+  if (!config) return res.json({ error: 'Config not found' });
+
+  const guildId = req.params.guildId;
+  const automodConfig = config[guildId]?.automod || {
+    enabled: false,
+    continueAfterTrigger: false,
+    bannedWords: { enabled: false, immuneRoles: [], whitelistChannels: [], words: [] },
+    spam: { enabled: false, limit: 5, interval: 3000, immuneRoles: [], whitelistChannels: [], actions: ['delete', 'mute'], response: null },
+    links: { enabled: false, blockInvites: true, blockLinks: true, whitelistDomains: [], whitelistInvites: [], immuneRoles: [], whitelistChannels: [], actions: ['delete'], response: null },
+    caps: { enabled: false, threshold: 70, minLength: 5, immuneRoles: [], whitelistChannels: [], actions: ['delete'], response: null },
+    mentions: { enabled: false, limit: 5, excludeUserMentions: false, immuneRoles: [], whitelistChannels: [], actions: ['delete'], response: null },
+    antiRaid: { enabled: false, threshold: 5, detectionWindow: 10000, cooldown: 60000, actions: ['slowmode'], slowmodeDuration: 10, minAccountAge: 7 },
+    warningEscalation: { enabled: false, rules: [{ threshold: 3, actions: ['mute'], duration: '10m' }, { threshold: 5, actions: ['ban'], duration: null }] },
+  };
+
+  res.json(automodConfig);
+});
+
+app.post('/api/automod/config/:guildId', requireAuth, (req, res) => {
+  const config = readJSON('config.json');
+  if (!config) return res.json({ error: 'Config not found' });
+
+  const guildId = req.params.guildId;
+  const updates = req.body;
+
+  if (!config[guildId]) config[guildId] = {};
+  if (!config[guildId].automod) config[guildId].automod = {};
+
+  config[guildId].automod = deepMerge(config[guildId].automod, updates);
+
+  if (writeJSON('config.json', config)) {
+    res.json({ success: true, config: config[guildId].automod });
+  } else {
+    res.json({ success: false, error: 'Failed to save config' });
+  }
+});
+
+app.post('/api/automod/banned-words/:guildId', requireAuth, (req, res) => {
+  const config = readJSON('config.json');
+  if (!config) return res.json({ error: 'Config not found' });
+
+  const guildId = req.params.guildId;
+  const { action, word } = req.body;
+
+  if (!config[guildId]) config[guildId] = {};
+  if (!config[guildId].automod) config[guildId].automod = {};
+  if (!config[guildId].automod.bannedWords) config[guildId].automod.bannedWords = { enabled: false, immuneRoles: [], whitelistChannels: [], words: [] };
+
+  const bannedWords = config[guildId].automod.bannedWords;
+
+  if (action === 'add' && word) {
+    bannedWords.words.push(word);
+  } else if (action === 'remove' && word) {
+    bannedWords.words = bannedWords.words.filter(w => w.word !== word);
+  } else if (action === 'update' && word) {
+    const index = bannedWords.words.findIndex(w => w.word === word.word);
+    if (index !== -1) {
+      bannedWords.words[index] = word;
+    }
+  }
+
+  if (writeJSON('config.json', config)) {
+    res.json({ success: true, words: bannedWords.words });
+  } else {
+    res.json({ success: false, error: 'Failed to save config' });
+  }
+});
+
+// ── GUILD INFO API ────────────────────────────────────────────────
+
+app.get('/api/guild/:guildId', requireAuth, (req, res) => {
+  const config = readJSON('config.json');
+  if (!config) return res.json({ error: 'Config not found' });
+
+  const guildId = req.params.guildId;
+  const guildConfig = config[guildId];
+
+  res.json({
+    id: guildId,
+    name: guildConfig?.serverName || 'Unknown Server',
+    icon: guildConfig?.serverIcon || null,
+    memberCount: guildConfig?.memberCount || 0,
+    logChannelId: guildConfig?.logChannelId || null
+  });
+});
+
+// ── DELETE API ROUTES ─────────────────────────────────────────────
+// IMPORTANT: specific routes (/guild/:guildId) must come BEFORE
+// parameterized ones (/:caseId / /:logId) or Express matches wrong
+
+app.delete('/api/cases/guild/:guildId', requireAuth, (req, res) => {
+  const cases = readJSON('cases.json');
+  if (!cases) return res.json({ success: false, error: 'Cases not found' });
+
+  const guildId = req.params.guildId;
+
+  if (cases[guildId]) {
+    cases[guildId].cases = [];
+    if (writeJSON('cases.json', cases)) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false, error: 'Failed to save' });
+    }
+  } else {
+    res.json({ success: false, error: 'Guild not found' });
+  }
+});
+
+app.delete('/api/cases/:caseId', requireAuth, (req, res) => {
+  const cases = readJSON('cases.json');
+  if (!cases) return res.json({ success: false, error: 'Cases not found' });
+
+  const rawId = req.params.caseId;
+  const caseIdNum = parseInt(rawId);
+  let found = false;
+
+  for (const guildId in cases) {
+    const guildCases = cases[guildId].cases || [];
+    const index = guildCases.findIndex(c =>
+      c.caseId === caseIdNum || String(c.caseId) === rawId
+    );
+
+    if (index !== -1) {
+      guildCases.splice(index, 1);
+      cases[guildId].cases = guildCases;
+      found = true;
+      break;
+    }
+  }
+
+  if (found) {
+    if (writeJSON('cases.json', cases)) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false, error: 'Failed to save cases.json' });
+    }
+  } else {
+    res.json({ success: false, error: 'Case not found' });
+  }
+});
+
+app.delete('/api/logs/guild/:guildId', requireAuth, (req, res) => {
+  const logs = readJSON('logs.json');
+  if (!logs) return res.json({ success: false, error: 'Logs not found' });
+
+  const guildId = req.params.guildId;
+
+  if (logs[guildId]) {
+    logs[guildId] = [];
+    if (writeJSON('logs.json', logs)) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false, error: 'Failed to save' });
+    }
+  } else {
+    res.json({ success: false, error: 'Guild not found' });
+  }
+});
+
+// Delete a single log by guildId + index (logs have no unique id field)
+// Frontend must send: DELETE /api/logs/:guildId/:index
+app.delete('/api/logs/:guildId/:index', requireAuth, (req, res) => {
+  const logs = readJSON('logs.json');
+  if (!logs) return res.json({ success: false, error: 'Logs not found' });
+
+  const { guildId, index } = req.params;
+  const idx = parseInt(index);
+
+  if (!logs[guildId]) {
+    return res.json({ success: false, error: 'Guild not found' });
+  }
+
+  if (isNaN(idx) || idx < 0 || idx >= logs[guildId].length) {
+    return res.json({ success: false, error: 'Invalid index' });
+  }
+
+  logs[guildId].splice(idx, 1);
+
+  if (writeJSON('logs.json', logs)) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, error: 'Failed to save logs.json' });
+  }
+});
+
+// ── HELPERS ───────────────────────────────────────────────────────
+
+function deepMerge(target, source) {
+  const output = { ...target };
+  for (const key in source) {
+    if (source[key] instanceof Object && key in target) {
+      output[key] = deepMerge(target[key], source[key]);
+    } else {
+      output[key] = source[key];
+    }
+  }
+  return output;
+}
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`雷 ¦ Raijin Dashboard running on port ${PORT}`);
 });

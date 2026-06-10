@@ -13,6 +13,9 @@ const COLORS = {
   messageDelete:  0x5865F2,
   messageUpdate:  0x5865F2,
   guildMemberAdd: 0x5865F2,
+  automod:        0xEF4444,
+  antiRaid:       0xDC2626,
+  warningEscalation: 0xF97316,
 };
 
 const LABELS = {
@@ -25,6 +28,9 @@ const LABELS = {
   messageDelete:  'MESSAGE DELETED',
   messageUpdate:  'MESSAGE EDITED',
   guildMemberAdd: 'MEMBER JOINED',
+  automod:        'AUTO MOD',
+  antiRaid:       'ANTI-RAID',
+  warningEscalation: 'WARNING ESCALATION',
 };
 
 const EMOJIS = {
@@ -37,6 +43,9 @@ const EMOJIS = {
   messageDelete:  '🗑️',
   messageUpdate:  '✏️',
   guildMemberAdd: '👋',
+  automod:        '🛡️',
+  antiRaid:       '🚨',
+  warningEscalation: '📈',
 };
 
 // ── LOG FILE WRITER ──────────────────────────────────────────

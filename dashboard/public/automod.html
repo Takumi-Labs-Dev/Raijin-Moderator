@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>雷 ¦ Raijin — Auto Moderation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>雷 ¦ Raijin</h1>
+      <p>// Takumi Labs v1.0</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">⬡</span> Overview
+      </a>
+      <a href="/cases" class="nav-item">
+        <span class="nav-icon">◈</span> Case Log
+      </a>
+      <a href="/warnings" class="nav-item">
+        <span class="nav-icon">⚠</span> Warnings
+      </a>
+      <a href="/logs" class="nav-item">
+        <span class="nav-icon">≡</span> Server Logs
+      </a>
+      <a href="/stats" class="nav-item">
+        <span class="nav-icon">◎</span> Statistics
+      </a>
+      <a href="/automod" class="nav-item active">
+        <span class="nav-icon">🛡</span> Auto Moderation
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">CHECKING...</span>
+      </div>
+      <a href="/logout" class="btn-logout">⏻ Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><span>Auto Moderation</span> — Configuration</div>
+      <div class="topbar-meta" id="lastUpdated">--</div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- GLOBAL TOGGLE -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-title">Auto Moderation Status</div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="automodEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="automodStatusText">Disabled</span>
+        </div>
+      </div>
+
+      <!-- BANNED WORDS -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🚫 Banned Words</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="bannedWordsEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="bannedWordsContent">
+          <div class="form-group">
+            <label>Add Banned Word</label>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px;">
+              <input type="text" id="newBannedWord" placeholder="Word or phrase">
+              <select id="bannedWordMatch">
+                <option value="contains">Contains</option>
+                <option value="exact">Exact Match</option>
+                <option value="regex">Regex</option>
+              </select>
+              <select id="bannedWordAction">
+                <option value="delete">Delete</option>
+                <option value="warn">Warn</option>
+                <option value="mute">Mute</option>
+                <option value="kick">Kick</option>
+                <option value="ban">Ban</option>
+              </select>
+              <button class="btn-primary" onclick="addBannedWord()">Add</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Auto Response (optional)</label>
+            <input type="text" id="bannedWordsResponse" placeholder="Watch your language, {user}">
+          </div>
+          <div class="form-group">
+            <label>Banned Words List</label>
+            <div id="bannedWordsList" class="word-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPAM PROTECTION -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>⚡ Spam Protection</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="spamEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="spamContent">
+          <div class="form-group">
+            <label>Message Limit: <span id="spamLimitValue">5</span></label>
+            <input type="range" id="spamLimit" min="3" max="20" value="5" oninput="document.getElementById('spamLimitValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>Time Window (ms): <span id="spamIntervalValue">3000</span></label>
+            <input type="range" id="spamInterval" min="1000" max="10000" step="500" value="3000" oninput="document.getElementById('spamIntervalValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>Action</label>
+            <select id="spamAction">
+              <option value="delete">Delete Only</option>
+              <option value="delete,warn">Delete + Warn</option>
+              <option value="delete,mute">Delete + Mute</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINK FILTER -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🔗 Link Filter</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="linksEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="linksContent">
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="blockInvites" checked> Block Discord Invites
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="blockLinks" checked> Block External Links
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Whitelisted Domains (comma-separated)</label>
+            <input type="text" id="whitelistDomains" placeholder="example.com, trusted.org">
+          </div>
+          <div class="form-group">
+            <label>Action</label>
+            <select id="linksAction">
+              <option value="delete">Delete Only</option>
+              <option value="delete,warn">Delete + Warn</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAPS FILTER -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🔠 Caps Lock Filter</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="capsEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="capsContent">
+          <div class="form-group">
+            <label>Caps Threshold: <span id="capsThresholdValue">70</span>%</label>
+            <input type="range" id="capsThreshold" min="50" max="100" value="70" oninput="document.getElementById('capsThresholdValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>Minimum Message Length: <span id="capsMinLengthValue">5</span></label>
+            <input type="range" id="capsMinLength" min="3" max="20" value="5" oninput="document.getElementById('capsMinLengthValue').textContent = this.value">
+          </div>
+        </div>
+      </div>
+
+      <!-- MENTION SPAM -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>👥 Mention Spam</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="mentionsEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="mentionsContent">
+          <div class="form-group">
+            <label>Max Mentions: <span id="mentionsLimitValue">5</span></label>
+            <input type="range" id="mentionsLimit" min="3" max="15" value="5" oninput="document.getElementById('mentionsLimitValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="excludeUserMentions"> Exclude User Mentions (roles only)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANTI-RAID -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🚨 Anti-Raid System</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="antiRaidEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="antiRaidContent">
+          <div class="form-group">
+            <label>Join Threshold: <span id="antiRaidThresholdValue">5</span></label>
+            <input type="range" id="antiRaidThreshold" min="3" max="20" value="5" oninput="document.getElementById('antiRaidThresholdValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>Detection Window (ms): <span id="antiRaidWindowValue">10000</span></label>
+            <input type="range" id="antiRaidWindow" min="5000" max="30000" step="1000" value="10000" oninput="document.getElementById('antiRaidWindowValue').textContent = this.value">
+          </div>
+          <div class="form-group">
+            <label>Action</label>
+            <select id="antiRaidAction">
+              <option value="slowmode">Enable Slowmode</option>
+              <option value="lockdown">Lockdown Channels</option>
+              <option value="restrict">Restrict New Users</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARNING ESCALATION -->
+      <div class="card">
+        <div class="card-title">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>📈 Warning Escalation</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="warningEscalationEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-content" id="warningEscalationContent">
+          <div class="escalation-rule">
+            <div class="rule-header">
+              <strong>3 Warnings → Mute (10m)</strong>
+            </div>
+          </div>
+          <div class="escalation-rule">
+            <div class="rule-header">
+              <strong>5 Warnings → Ban</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVE BUTTON -->
+      <div style="text-align: right; margin-top: 24px;">
+        <button class="btn-primary" onclick="saveConfig()" style="padding: 12px 32px; font-size: 16px;">
+          💾 Save Configuration
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const GUILD_ID = '1503315468889620520'; // Replace with your guild ID or make dynamic
+  let currentConfig = null;
+
+  async function loadConfig() {
+    try {
+      const res = await fetch(`/api/automod/config/${GUILD_ID}`);
+      const data = await res.json();
+      currentConfig = data;
+
+      // Global toggle
+      document.getElementById('automodEnabled').checked = data.enabled;
+      document.getElementById('automodStatusText').textContent = data.enabled ? 'Enabled' : 'Disabled';
+
+      // Banned Words
+      document.getElementById('bannedWordsEnabled').checked = data.bannedWords?.enabled || false;
+      document.getElementById('bannedWordsResponse').value = data.bannedWords?.response || '';
+      renderBannedWords(data.bannedWords?.words || []);
+      toggleCardContent('bannedWordsEnabled', 'bannedWordsContent');
+
+      // Spam
+      document.getElementById('spamEnabled').checked = data.spam?.enabled || false;
+      document.getElementById('spamLimit').value = data.spam?.limit || 5;
+      document.getElementById('spamLimitValue').textContent = data.spam?.limit || 5;
+      document.getElementById('spamInterval').value = data.spam?.interval || 3000;
+      document.getElementById('spamIntervalValue').textContent = data.spam?.interval || 3000;
+      const spamActions = Array.isArray(data.spam?.actions) ? data.spam.actions : ['delete'];
+      document.getElementById('spamAction').value = spamActions.join(',');
+      toggleCardContent('spamEnabled', 'spamContent');
+
+      // Links
+      document.getElementById('linksEnabled').checked = data.links?.enabled || false;
+      document.getElementById('blockInvites').checked = data.links?.blockInvites !== false;
+      document.getElementById('blockLinks').checked = data.links?.blockLinks !== false;
+      const linkDomains = Array.isArray(data.links?.whitelistDomains) ? data.links.whitelistDomains : [];
+      document.getElementById('whitelistDomains').value = linkDomains.join(', ');
+      const linkActions = Array.isArray(data.links?.actions) ? data.links.actions : ['delete'];
+      document.getElementById('linksAction').value = linkActions.join(',');
+      toggleCardContent('linksEnabled', 'linksContent');
+
+      // Caps
+      document.getElementById('capsEnabled').checked = data.caps?.enabled || false;
+      document.getElementById('capsThreshold').value = data.caps?.threshold || 70;
+      document.getElementById('capsThresholdValue').textContent = data.caps?.threshold || 70;
+      document.getElementById('capsMinLength').value = data.caps?.minLength || 5;
+      document.getElementById('capsMinLengthValue').textContent = data.caps?.minLength || 5;
+      toggleCardContent('capsEnabled', 'capsContent');
+
+      // Mentions
+      document.getElementById('mentionsEnabled').checked = data.mentions?.enabled || false;
+      document.getElementById('mentionsLimit').value = data.mentions?.limit || 5;
+      document.getElementById('mentionsLimitValue').textContent = data.mentions?.limit || 5;
+      document.getElementById('excludeUserMentions').checked = data.mentions?.excludeUserMentions || false;
+      toggleCardContent('mentionsEnabled', 'mentionsContent');
+
+      // Anti-Raid
+      document.getElementById('antiRaidEnabled').checked = data.antiRaid?.enabled || false;
+      document.getElementById('antiRaidThreshold').value = data.antiRaid?.threshold || 5;
+      document.getElementById('antiRaidThresholdValue').textContent = data.antiRaid?.threshold || 5;
+      document.getElementById('antiRaidWindow').value = data.antiRaid?.detectionWindow || 10000;
+      document.getElementById('antiRaidWindowValue').textContent = data.antiRaid?.detectionWindow || 10000;
+      const raidActions = Array.isArray(data.antiRaid?.actions) ? data.antiRaid.actions : ['slowmode'];
+      document.getElementById('antiRaidAction').value = raidActions[0] || 'slowmode';
+      toggleCardContent('antiRaidEnabled', 'antiRaidContent');
+
+      // Warning Escalation
+      document.getElementById('warningEscalationEnabled').checked = data.warningEscalation?.enabled || false;
+      toggleCardContent('warningEscalationEnabled', 'warningEscalationContent');
+
+      // Update status
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = 'RAIJIN ONLINE';
+      document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB');
+
+    } catch (err) {
+      console.error('Failed to load config:', err);
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'DATA ERROR';
+    }
+  }
+
+  function toggleCardContent(toggleId, contentId) {
+    const toggle = document.getElementById(toggleId);
+    const content = document.getElementById(contentId);
+    
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        content.classList.add('show');
+      } else {
+        content.classList.remove('show');
+      }
+    });
+
+    // Initial state
+    if (toggle.checked) {
+      content.classList.add('show');
+    }
+  }
+
+  function renderBannedWords(words) {
+    const container = document.getElementById('bannedWordsList');
+    if (!words || words.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>No banned words configured</p></div>';
+      return;
+    }
+    container.innerHTML = words.map((word, index) => `
+      <div class="word-item">
+        <span class="word-text">${word.word}</span>
+        <span class="word-meta">${word.matchType} → ${word.actions?.join(', ') || 'delete'}</span>
+        <button class="btn-delete" onclick="removeBannedWord('${word.word}')">×</button>
+      </div>
+    `).join('');
+  }
+
+  async function addBannedWord() {
+    const word = document.getElementById('newBannedWord').value.trim();
+    const matchType = document.getElementById('bannedWordMatch').value;
+    const action = document.getElementById('bannedWordAction').value;
+
+    if (!word) return;
+
+    try {
+      const res = await fetch(`/api/automod/banned-words/${GUILD_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add',
+          word: { word, matchType, actions: [action], enabled: true }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('newBannedWord').value = '';
+        renderBannedWords(data.words);
+      }
+    } catch (err) {
+      console.error('Failed to add banned word:', err);
+    }
+  }
+
+  async function removeBannedWord(word) {
+    try {
+      const res = await fetch(`/api/automod/banned-words/${GUILD_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove', word })
+      });
+      const data = await res.json();
+      if (data.success) {
+        renderBannedWords(data.words);
+      }
+    } catch (err) {
+      console.error('Failed to remove banned word:', err);
+    }
+  }
+
+  async function saveConfig() {
+    const updates = {
+      enabled: document.getElementById('automodEnabled').checked,
+      bannedWords: {
+        enabled: document.getElementById('bannedWordsEnabled').checked,
+        response: document.getElementById('bannedWordsResponse').value,
+      },
+      spam: {
+        enabled: document.getElementById('spamEnabled').checked,
+        limit: parseInt(document.getElementById('spamLimit').value),
+        interval: parseInt(document.getElementById('spamInterval').value),
+        actions: document.getElementById('spamAction').value.split(','),
+      },
+      links: {
+        enabled: document.getElementById('linksEnabled').checked,
+        blockInvites: document.getElementById('blockInvites').checked,
+        blockLinks: document.getElementById('blockLinks').checked,
+        whitelistDomains: document.getElementById('whitelistDomains').value.split(',').map(d => d.trim()).filter(d => d),
+        actions: document.getElementById('linksAction').value.split(','),
+      },
+      caps: {
+        enabled: document.getElementById('capsEnabled').checked,
+        threshold: parseInt(document.getElementById('capsThreshold').value),
+        minLength: parseInt(document.getElementById('capsMinLength').value),
+      },
+      mentions: {
+        enabled: document.getElementById('mentionsEnabled').checked,
+        limit: parseInt(document.getElementById('mentionsLimit').value),
+        excludeUserMentions: document.getElementById('excludeUserMentions').checked,
+      },
+      antiRaid: {
+        enabled: document.getElementById('antiRaidEnabled').checked,
+        threshold: parseInt(document.getElementById('antiRaidThreshold').value),
+        detectionWindow: parseInt(document.getElementById('antiRaidWindow').value),
+        actions: [document.getElementById('antiRaidAction').value],
+      },
+      warningEscalation: {
+        enabled: document.getElementById('warningEscalationEnabled').checked,
+      },
+    };
+
+    try {
+      const res = await fetch(`/api/automod/config/${GUILD_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Configuration saved successfully!');
+        loadConfig();
+      } else {
+        alert('Failed to save configuration: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Failed to save config:', err);
+      alert('Failed to save configuration');
+    }
+  }
+
+  // Load config on page load
+  loadConfig();
+</script>
+</body>
+</html>

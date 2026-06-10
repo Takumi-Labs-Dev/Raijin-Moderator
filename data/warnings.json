@@ -33,6 +33,13 @@
           "moderatorId": "1503314291003232317",
           "moderatorName": "匠 ¦ Takumi",
           "timestamp": "2026-05-26T14:31:08.844Z"
+        },
+        {
+          "warningId": 2,
+          "reason": "123",
+          "moderatorId": "1503314291003232317",
+          "moderatorName": "takumi_labs",
+          "timestamp": "2026-06-10T03:56:25.003Z"
         }
       ]
     }

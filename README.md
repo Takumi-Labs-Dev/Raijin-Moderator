@@ -21,7 +21,15 @@
 
 ## ✦ Features
 
-* **⚔️ Moderation Commands** — Execute `ban`, `kick`, `timeout`, and `warn` via modern slash commands
+* **⚔️ Moderation Commands** — Execute `ban`, `kick`, `timeout`, `warn`, `unmute`, and `clearwarnings` via modern slash commands
+* **🛡️ Auto Moderation** — Advanced automated moderation with multiple filters:
+  - **Banned Words** — Filter profanity with contains, exact, or regex match types
+  - **Spam Protection** — Rate limiting with configurable message limits and time windows
+  - **Link Filter** — Block Discord invites and external URLs with domain whitelisting
+  - **Caps Lock Filter** — Detect excessive capitalization with threshold settings
+  - **Mention Spam** — Limit user/role mentions per message
+  - **Anti-Raid Detection** — Detect sudden member join spikes with automatic countermeasures
+  - **Warning Escalation** — Automatic punishment escalation (3 warns → mute, 5 warns → ban)
 * **📋 Advanced Logging** — Records every moderation action with full moderator + user details
 * **⚠️ Warning System** — Tracks warnings and complete moderation history per user
 * **📁 Case Logs** — Structured logs for accountability and audits
@@ -34,11 +42,13 @@
 
 ## ✦ Dashboard System
 
-* **🌐 Web Control Panel** — Manage your server remotely
+* **🌐 Web Control Panel** — Manage your server remotely with a modern dark-themed interface
 * **📊 Logs & Cases Viewer** — Clean interface for logs, cases, and user history
+* **🛡️ Auto Moderation Panel** — Configure all automod filters with toggles, sliders, and word management
 * **⚙️ Configurable Settings** — Adjust moderation settings without touching code
-* **📡 Real-Time Monitoring** — Live server activity tracking
-* **🛡️ Full Admin Control** — Built for speed, clarity, and complete oversight
+* **📡 Real-Time Monitoring** — Live server activity tracking with uptime counter
+* **� Statistics & Analytics** — Visual charts and metrics for moderation activity
+* **🎨 Premium UI** — Red-themed design with smooth animations and gradients
 
 ---
 
@@ -100,19 +110,23 @@ http://localhost:3000
 
 ## ✦ Bot Commands
 
-| Command    | Description                  |
-| ---------- | ---------------------------- |
-| `/ban`     | Ban a user from the server   |
-| `/kick`    | Kick a user                  |
-| `/timeout` | Temporarily mute a user      |
-| `/warn`    | Issue a warning              |
-| `/case`    | View moderation case details |
-| `/logs`    | View recent moderation logs  |
+| Command           | Description                              |
+| ----------------- | ---------------------------------------- |
+| `/ban`            | Ban a user from the server               |
+| `/kick`           | Kick a user                              |
+| `/mute`           | Temporarily mute a user (timeout)        |
+| `/unmute`         | Remove timeout from a user               |
+| `/warn`           | Issue a warning                          |
+| `/clearwarnings`  | Clear all warnings for a user            |
+| `/warnings`       | View a user's warning history             |
+| `/case`           | View moderation case details              |
+| `/link-log-channel` | Set the channel for moderation logs   |
 
 ---
 
 ## ✦ How It Works
 
+### Manual Moderation
 Moderator executes command
 ↓
 Raijin processes action
@@ -120,6 +134,19 @@ Raijin processes action
 User affected (ban/kick/etc.)
 ↓
 Action logged with full details
+↓
+Dashboard updates in real-time
+
+### Auto Moderation
+User sends message
+↓
+Raijin runs message through enabled filters
+↓
+Filter detects violation (spam, banned words, etc.)
+↓
+Configured actions executed (delete, warn, mute, etc.)
+↓
+Action logged with automod details
 ↓
 Dashboard updates in real-time
 
