@@ -19,17 +19,58 @@
 
 ---
 
+## ✦ Preview
+
+### 📊 Dashboard Overview
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082338/RaijinOverviewPreview_taf1cp.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082338/RaijinOverviewPreview_taf1cp.png" />
+</a>
+
+### ⚖️ Case Logs
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinCaseLogPreview_ratqdm.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinCaseLogPreview_ratqdm.png" />
+</a>
+
+### ⚠️ Warning System
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinWarningsPreview_va8urc.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinWarningsPreview_va8urc.png" />
+</a>
+
+### 📝 Server Logs
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinServerLogsPreview_jedhix.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinServerLogsPreview_jedhix.png" />
+</a>
+
+### 📈 Statistics & Analytics
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinStatisticsPreview_sepmbq.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082305/RaijinStatisticsPreview_sepmbq.png" />
+</a>
+
+### 🛡️ Auto Moderation Panel
+
+<a href="https://res.cloudinary.com/didnxcljf/image/upload/v1781082304/RaijinAutoModerationPreview_rsiqub.png" target="_blank">
+  <img src="https://res.cloudinary.com/didnxcljf/image/upload/v1781082304/RaijinAutoModerationPreview_rsiqub.png" />
+</a>
+
+---
+
 ## ✦ Features
 
 * **⚔️ Moderation Commands** — Execute `ban`, `kick`, `timeout`, `warn`, `unmute`, and `clearwarnings` via modern slash commands
 * **🛡️ Auto Moderation** — Advanced automated moderation with multiple filters:
-  - **Banned Words** — Filter profanity with contains, exact, or regex match types
-  - **Spam Protection** — Rate limiting with configurable message limits and time windows
-  - **Link Filter** — Block Discord invites and external URLs with domain whitelisting
-  - **Caps Lock Filter** — Detect excessive capitalization with threshold settings
-  - **Mention Spam** — Limit user/role mentions per message
-  - **Anti-Raid Detection** — Detect sudden member join spikes with automatic countermeasures
-  - **Warning Escalation** — Automatic punishment escalation (3 warns → mute, 5 warns → ban)
+
+  * **Banned Words** — Filter profanity with contains, exact, or regex match types
+  * **Spam Protection** — Rate limiting with configurable message limits and time windows
+  * **Link Filter** — Block Discord invites and external URLs with domain whitelisting
+  * **Caps Lock Filter** — Detect excessive capitalization with threshold settings
+  * **Mention Spam** — Limit user/role mentions per message
+  * **Anti-Raid Detection** — Detect sudden member join spikes with automatic countermeasures
+  * **Warning Escalation** — Automatic punishment escalation (3 warns → mute, 5 warns → ban)
 * **📋 Advanced Logging** — Records every moderation action with full moderator + user details
 * **⚠️ Warning System** — Tracks warnings and complete moderation history per user
 * **📁 Case Logs** — Structured logs for accountability and audits
@@ -47,7 +88,7 @@
 * **🛡️ Auto Moderation Panel** — Configure all automod filters with toggles, sliders, and word management
 * **⚙️ Configurable Settings** — Adjust moderation settings without touching code
 * **📡 Real-Time Monitoring** — Live server activity tracking with uptime counter
-* **� Statistics & Analytics** — Visual charts and metrics for moderation activity
+* **📈 Statistics & Analytics** — Visual charts and metrics for moderation activity
 * **🎨 Premium UI** — Red-themed design with smooth animations and gradients
 
 ---
@@ -110,23 +151,24 @@ http://localhost:3000
 
 ## ✦ Bot Commands
 
-| Command           | Description                              |
-| ----------------- | ---------------------------------------- |
-| `/ban`            | Ban a user from the server               |
-| `/kick`           | Kick a user                              |
-| `/mute`           | Temporarily mute a user (timeout)        |
-| `/unmute`         | Remove timeout from a user               |
-| `/warn`           | Issue a warning                          |
-| `/clearwarnings`  | Clear all warnings for a user            |
-| `/warnings`       | View a user's warning history             |
-| `/case`           | View moderation case details              |
-| `/link-log-channel` | Set the channel for moderation logs   |
+| Command             | Description                         |
+| ------------------- | ----------------------------------- |
+| `/ban`              | Ban a user from the server          |
+| `/kick`             | Kick a user                         |
+| `/mute`             | Temporarily mute a user (timeout)   |
+| `/unmute`           | Remove timeout from a user          |
+| `/warn`             | Issue a warning                     |
+| `/clearwarnings`    | Clear all warnings for a user       |
+| `/warnings`         | View a user's warning history       |
+| `/case`             | View moderation case details        |
+| `/link-log-channel` | Set the channel for moderation logs |
 
 ---
 
 ## ✦ How It Works
 
 ### Manual Moderation
+
 Moderator executes command
 ↓
 Raijin processes action
@@ -138,6 +180,7 @@ Action logged with full details
 Dashboard updates in real-time
 
 ### Auto Moderation
+
 User sends message
 ↓
 Raijin runs message through enabled filters
